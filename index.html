@@ -1,0 +1,2231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenTrack - Master Project Costing Automation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f0ff 0%, #e8dff5 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a148c 0%, #6a1b9a 50%, #8e24aa 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(74, 20, 140, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-img {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 10px;
+            object-fit: contain;
+            padding: 5px;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .project-selector {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #4a148c;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-group input, .form-group select {
+            padding: 12px;
+            border: 2px solid #e0d4f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #6a1b9a;
+            box-shadow: 0 0 0 3px rgba(106, 27, 154, 0.1);
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 5px solid #6a1b9a;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4a148c;
+        }
+
+        .card .subtext {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .card.profit {
+            border-left-color: #4caf50;
+        }
+
+        .card.loss {
+            border-left-color: #f44336;
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #f0e6ff;
+        }
+
+        .section h2 {
+            color: #4a148c;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #6a1b9a, #8e24aa);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.95em;
+        }
+
+        th {
+            background: linear-gradient(135deg, #4a148c, #6a1b9a);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            font-size: 0.9em;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0e6ff;
+        }
+
+        tr:hover {
+            background: #faf8ff;
+        }
+
+        .input-cell {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .input-cell:focus {
+            border-color: #6a1b9a;
+            outline: none;
+        }
+
+        .currency {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .total-row {
+            background: #f3e5f5 !important;
+            font-weight: bold;
+            font-size: 1.05em;
+        }
+
+        .total-row td {
+            border-top: 2px solid #6a1b9a;
+            border-bottom: 2px solid #6a1b9a;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6a1b9a, #8e24aa);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(106, 27, 154, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50, #66bb6a);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #ef5350);
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.8em;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, #4a148c, #6a1b9a);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .summary-item {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .summary-item h4 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .summary-item .amount {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-profit {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-loss {
+            background: #f44336;
+            color: white;
+        }
+
+        .status-break-even {
+            background: #ff9800;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0d4f0;
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .tab.active {
+            background: #6a1b9a;
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #f0e6ff;
+            color: #6a1b9a;
+        }
+
+        .bin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .bin-card {
+            background: #faf8ff;
+            border: 2px solid #e0d4f0;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .bin-card:hover {
+            border-color: #6a1b9a;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(106, 27, 154, 0.1);
+        }
+
+        .bin-card h4 {
+            color: #4a148c;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bin-icon {
+            font-size: 1.5em;
+        }
+
+        .bin-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .bin-inputs .form-group {
+            margin-bottom: 10px;
+        }
+
+        .bin-inputs label {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .bin-inputs input {
+            padding: 8px;
+            font-size: 0.9em;
+        }
+
+        .vas-section {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border-left: 5px solid #ff9800;
+        }
+
+        .vas-section h2 {
+            color: #e65100;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            .section { break-inside: avoid; page-break-inside: avoid; }
+            body { background: white; }
+            .header { background: #4a148c !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .summary-section { background: #4a148c !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            th { background: #4a148c !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: white !important; }
+            .total-row { background: #f3e5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification.success { background: #4caf50; }
+        .notification.error { background: #f44336; }
+
+        .sub-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #6a1b9a;
+        }
+
+        .sub-section h4 {
+            color: #4a148c;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .highlight-box {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .highlight-box h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .highlight-box .big-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #4a148c;
+        }
+
+        .logo-upload {
+            background: #f0f6ff;
+            border: 2px dashed #6a1b9a;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-preview {
+            max-width: 150px;
+            max-height: 150px;
+            margin-top: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Logo -->
+        <div class="header">
+            <div class="logo-section">
+                <img id="headerLogo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%234a148c' width='100' height='100' rx='10'/%3E%3Ctext x='50' y='60' font-family='Arial' font-size='40' fill='white' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E" class="logo-img" alt="GreenTrack Logo">
+                <div>
+                    <h1>Master Project Costing</h1>
+                    <p>Automated Cost Analysis & Profitability System</p>
+                    <p style="font-size: 0.8em; margin-top: 5px;">GreenTrack Environment Services</p>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.9em; opacity: 0.9;">Date: <span id="currentDate"></span></div>
+                <div style="font-size: 0.8em; margin-top: 5px;">v3.0 - Bin & VAS Enabled</div>
+            </div>
+        </div>
+
+        <!-- Logo Upload Section -->
+        <div class="section no-print">
+            <h3 style="color: #4a148c; margin-bottom: 15px;">🎨 Company Logo Settings</h3>
+            <div class="logo-upload">
+                <p>Upload your GreenTrack logo for PDF/Excel exports</p>
+                <input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(event)" style="margin-top: 10px;">
+                <div id="logoPreviewContainer"></div>
+                <p style="font-size: 0.8em; color: #666; margin-top: 10px;">Recommended: PNG with transparent background, 200x200px</p>
+            </div>
+        </div>
+
+        <!-- Project Selection -->
+        <div class="project-selector">
+            <h2 style="color: #4a148c; margin-bottom: 15px;">Project Configuration</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Project Name</label>
+                    <input type="text" id="projectName" placeholder="e.g., ARM Project, AGC Mall" onchange="updateCalculations()">
+                </div>
+                <div class="form-group">
+                    <label>Client Name</label>
+                    <input type="text" id="clientName" placeholder="e.g., Al Ghurair">
+                </div>
+                <div class="form-group">
+                    <label>Contract Period (Months)</label>
+                    <input type="number" id="contractPeriod" value="12" min="1" onchange="updateCalculations()">
+                </div>
+                <div class="form-group">
+                    <label>Project Type</label>
+                    <select id="projectType" onchange="updateCalculations()">
+                        <option value="commercial">Commercial</option>
+                        <option value="residential">Residential</option>
+                        <option value="industrial">Industrial</option>
+                        <option value="municipal">Municipal</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Cards -->
+        <div class="dashboard-cards">
+            <div class="card">
+                <h3>Total Revenue</h3>
+                <div class="value" id="totalRevenue">AED 0.00</div>
+                <div class="subtext">Contract Value</div>
+            </div>
+            <div class="card">
+                <h3>Total Costs</h3>
+                <div class="value" id="totalCosts">AED 0.00</div>
+                <div class="subtext">All Inclusive</div>
+            </div>
+            <div class="card" id="profitCard">
+                <h3>Net Profit/Loss</h3>
+                <div class="value" id="netProfit">AED 0.00</div>
+                <div class="subtext" id="profitMargin">Margin: 0%</div>
+            </div>
+            <div class="card">
+                <h3>Daily Revenue Target</h3>
+                <div class="value" id="dailyRevenue">AED 0.00</div>
+                <div class="subtext">Required per day</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs no-print">
+            <div class="tab active" onclick="switchTab('revenue')">Revenue</div>
+            <div class="tab" onclick="switchTab('bins')">🗑️ Bin Inventory</div>
+            <div class="tab" onclick="switchTab('vas')">✨ Value Added Services</div>
+            <div class="tab" onclick="switchTab('operational')">Operational</div>
+            <div class="tab" onclick="switchTab('overhead')">Overhead</div>
+            <div class="tab" onclick="switchTab('summary')">Summary</div>
+        </div>
+
+        <!-- Revenue Section -->
+        <div id="revenueTab" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">💰</span> Revenue Streams</h2>
+                    <button class="btn btn-primary no-print" onclick="addRevenueRow()">+ Add Service</button>
+                </div>
+                <table id="revenueTable">
+                    <thead>
+                        <tr>
+                            <th>Service Description</th>
+                            <th>Unit</th>
+                            <th>Qty/Month</th>
+                            <th>Rate (AED)</th>
+                            <th>Monthly</th>
+                            <th>Contract Value</th>
+                            <th class="no-print">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Waste Collection - General" onchange="updateCalculations()"></td>
+                            <td><input type="text" class="input-cell" value="Trip" style="width: 80px;" onchange="updateCalculations()"></td>
+                            <td><input type="number" class="input-cell" value="30" style="width: 80px;" onchange="updateCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="500" onchange="updateCalculations()"></td>
+                            <td class="currency row-monthly">0.00</td>
+                            <td class="currency row-total">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="4"><strong>Total Service Revenue</strong></td>
+                            <td class="currency" id="revenueMonthlyTotal">0.00</td>
+                            <td class="currency" id="revenueGrandTotal">0.00</td>
+                            <td class="no-print"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">🗑️</span> Bin Rental Revenue</h2>
+                </div>
+                <table id="binRevenueTable">
+                    <thead>
+                        <tr>
+                            <th>Bin Type</th>
+                            <th>Qty on Site</th>
+                            <th>Monthly Rental</th>
+                            <th>Monthly Revenue</th>
+                            <th>Contract Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="binRevenueBody">
+                        <!-- Auto-populated from bin inventory -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="3"><strong>Total Bin Rental Revenue</strong></td>
+                            <td class="currency" id="binRevenueMonthly">0.00</td>
+                            <td class="currency" id="binRevenueTotal">0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bin Inventory Section -->
+        <div id="binsTab" class="tab-content hidden">
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">🗑️</span> Bin Inventory & Costs</h2>
+                    <button class="btn btn-primary no-print" onclick="calculateBinCosts()">Recalculate All</button>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>Total Bin Investment Required</h3>
+                    <div class="big-number" id="totalBinInvestment">AED 0.00</div>
+                    <p style="margin-top: 10px; color: #666;">Initial procurement cost for all bins</p>
+                </div>
+
+                <!-- Wheelie Bins -->
+                <div class="sub-section">
+                    <h4>🛒 Wheelie Bins (120L & 240L)</h4>
+                    <div class="bin-grid">
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">⚫</span> 120L Black Bin (Plastic)</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_120_black_plastic_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_120_black_plastic_cost" value="450" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_120_black_plastic_rental" value="25" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_120_black_plastic_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">🟢</span> 120L Green Bin (Plastic)</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_120_green_plastic_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_120_green_plastic_cost" value="450" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_120_green_plastic_rental" value="25" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_120_green_plastic_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">⚫</span> 240L Black Bin (Plastic)</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_240_black_plastic_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_240_black_plastic_cost" value="650" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_240_black_plastic_rental" value="35" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_240_black_plastic_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">🟢</span> 240L Green Bin (Plastic)</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_240_green_plastic_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_240_green_plastic_cost" value="650" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_240_green_plastic_rental" value="35" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_240_green_plastic_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metal Bins -->
+                <div class="sub-section">
+                    <h4>🔩 Metal Bins (Galvanised)</h4>
+                    <div class="bin-grid">
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">⚙️</span> 1.1 CBM Galvanised</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_1_1_gal_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_1_1_gal_cost" value="1200" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_1_1_gal_rental" value="80" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_1_1_gal_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">🔧</span> 2.5 CBM Galvanised</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_2_5_gal_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_2_5_gal_cost" value="2200" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_2_5_gal_rental" value="150" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_2_5_gal_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">⚙️</span> 4.5 CBM Galvanised</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_4_5_gal_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_4_5_gal_cost" value="3500" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_4_5_gal_rental" value="250" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_4_5_gal_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skip Bins -->
+                <div class="sub-section">
+                    <h4>🚛 Skip Bins</h4>
+                    <div class="bin-grid">
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">🟫</span> 5 CBM Skip</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_5_skip_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_5_skip_cost" value="4500" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_5_skip_rental" value="300" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_5_skip_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">🟫</span> 10 CBM Skip</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_10_skip_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_10_skip_cost" value="7500" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_10_skip_rental" value="500" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_10_skip_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">🟫</span> 14 CBM Skip</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_14_skip_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_14_skip_cost" value="9500" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_14_skip_rental" value="650" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_14_skip_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">🟫</span> 20 CBM Skip</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_20_skip_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_20_skip_cost" value="12000" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_20_skip_rental" value="800" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_20_skip_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PC Bins -->
+                <div class="sub-section">
+                    <h4>♻️ PC Bins (Plastic Composite)</h4>
+                    <div class="bin-grid">
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">🔷</span> 12 CBM PC Bin</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_12_pc_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_12_pc_cost" value="8500" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_12_pc_rental" value="600" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_12_pc_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">🔷</span> 20 CBM PC Bin</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty Required</label>
+                                    <input type="number" id="bin_20_pc_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unit Cost (AED)</label>
+                                    <input type="number" id="bin_20_pc_cost" value="11000" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Rental</label>
+                                    <input type="number" id="bin_20_pc_rental" value="750" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Value</label>
+                                    <input type="text" id="bin_20_pc_total" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bin Liners -->
+                <div class="sub-section">
+                    <h4>🛍️ Bin Liners & Consumables</h4>
+                    <div class="bin-grid">
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">🛍️</span> Bin Liners (Monthly)</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Qty per Month</label>
+                                    <input type="number" id="liner_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Cost per Liner (AED)</label>
+                                    <input type="number" id="liner_unit_cost" value="5" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Cost</label>
+                                    <input type="text" id="liner_monthly_cost" readonly class="currency" value="0.00">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contract Period Cost</label>
+                                    <input type="text" id="liner_total_cost" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bin-card">
+                            <h4><span class="bin-icon">🧼</span> Bin Cleaning (Monthly)</h4>
+                            <div class="bin-inputs">
+                                <div class="form-group">
+                                    <label>Bins to Clean</label>
+                                    <input type="number" id="cleaning_qty" value="0" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Cost per Bin (AED)</label>
+                                    <input type="number" id="cleaning_unit_cost" value="25" onchange="updateBinCalculations()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monthly Cost</label>
+                                    <input type="text" id="cleaning_monthly_cost" readonly class="currency" value="0.00">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contract Period Cost</label>
+                                    <input type="text" id="cleaning_total_cost" readonly class="currency" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Value Added Services Section -->
+        <div id="vasTab" class="tab-content hidden">
+            <div class="section vas-section">
+                <div class="section-header">
+                    <h2><span class="icon">✨</span> Value Added Services (VAS)</h2>
+                    <button class="btn btn-primary no-print" onclick="addVASRow()">+ Add VAS Item</button>
+                </div>
+                <p style="margin-bottom: 20px; color: #e65100; font-weight: 600;">
+                    💡 High-margin additional services to increase project profitability
+                </p>
+
+                <table id="vasTable">
+                    <thead>
+                        <tr>
+                            <th>VAS Service</th>
+                            <th>Category</th>
+                            <th>Unit</th>
+                            <th>Qty/Month</th>
+                            <th>Cost (AED)</th>
+                            <th>Price (AED)</th>
+                            <th>Margin %</th>
+                            <th>Monthly Profit</th>
+                            <th class="no-print">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Deep Cleaning - Bins"></td>
+                            <td>
+                                <select class="input-cell">
+                                    <option>Cleaning</option>
+                                    <option>Recycling</option>
+                                    <option>Consulting</option>
+                                    <option>Equipment</option>
+                                    <option>Training</option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="input-cell" value="Bin" style="width: 80px;"></td>
+                            <td><input type="number" class="input-cell" value="10" style="width: 80px;" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="30" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="75" onchange="updateVASCalculations()"></td>
+                            <td class="currency vas-margin">0%</td>
+                            <td class="currency vas-profit">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Odor Control Treatment"></td>
+                            <td>
+                                <select class="input-cell">
+                                    <option>Cleaning</option>
+                                    <option>Recycling</option>
+                                    <option>Consulting</option>
+                                    <option>Equipment</option>
+                                    <option>Training</option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="input-cell" value="Visit" style="width: 80px;"></td>
+                            <td><input type="number" class="input-cell" value="4" style="width: 80px;" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="150" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="350" onchange="updateVASCalculations()"></td>
+                            <td class="currency vas-margin">0%</td>
+                            <td class="currency vas-profit">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Waste Audit & Reporting"></td>
+                            <td>
+                                <select class="input-cell">
+                                    <option>Cleaning</option>
+                                    <option>Recycling</option>
+                                    <option selected>Consulting</option>
+                                    <option>Equipment</option>
+                                    <option>Training</option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="input-cell" value="Report" style="width: 80px;"></td>
+                            <td><input type="number" class="input-cell" value="1" style="width: 80px;" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="500" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="1200" onchange="updateVASCalculations()"></td>
+                            <td class="currency vas-margin">0%</td>
+                            <td class="currency vas-profit">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Recycling Consultation"></td>
+                            <td>
+                                <select class="input-cell">
+                                    <option>Cleaning</option>
+                                    <option selected>Recycling</option>
+                                    <option>Consulting</option>
+                                    <option>Equipment</option>
+                                    <option>Training</option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="input-cell" value="Hour" style="width: 80px;"></td>
+                            <td><input type="number" class="input-cell" value="8" style="width: 80px;" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="100" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="250" onchange="updateVASCalculations()"></td>
+                            <td class="currency vas-margin">0%</td>
+                            <td class="currency vas-profit">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Staff Training (Waste Segregation)"></td>
+                            <td>
+                                <select class="input-cell">
+                                    <option>Cleaning</option>
+                                    <option>Recycling</option>
+                                    <option>Consulting</option>
+                                    <option>Equipment</option>
+                                    <option selected>Training</option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="input-cell" value="Session" style="width: 80px;"></td>
+                            <td><input type="number" class="input-cell" value="2" style="width: 80px;" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="400" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="900" onchange="updateVASCalculations()"></td>
+                            <td class="currency vas-margin">0%</td>
+                            <td class="currency vas-profit">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Sanitization Service"></td>
+                            <td>
+                                <select class="input-cell">
+                                    <option selected>Cleaning</option>
+                                    <option>Recycling</option>
+                                    <option>Consulting</option>
+                                    <option>Equipment</option>
+                                    <option>Training</option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="input-cell" value="Sq.M" style="width: 80px;"></td>
+                            <td><input type="number" class="input-cell" value="500" style="width: 80px;" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="2" onchange="updateVASCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="5" onchange="updateVASCalculations()"></td>
+                            <td class="currency vas-margin">0%</td>
+                            <td class="currency vas-profit">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="6"><strong>Total Value Added Services</strong></td>
+                            <td class="currency" id="vasAvgMargin">0%</td>
+                            <td class="currency" id="vasTotalProfit">0.00</td>
+                            <td class="no-print"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div class="highlight-box" style="margin-top: 30px; background: #fff3e0; border-color: #ff9800;">
+                    <h3 style="color: #e65100;">VAS Impact on Project</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; text-align: left;">
+                        <div>
+                            <div style="font-size: 0.9em; color: #666;">VAS Monthly Revenue</div>
+                            <div style="font-size: 1.5em; font-weight: bold; color: #4a148c;" id="vasMonthlyRevenue">AED 0</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9em; color: #666;">VAS Monthly Cost</div>
+                            <div style="font-size: 1.5em; font-weight: bold; color: #4a148c;" id="vasMonthlyCost">AED 0</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9em; color: #666;">VAS Net Profit</div>
+                            <div style="font-size: 1.5em; font-weight: bold; color: #4caf50;" id="vasNetProfit">AED 0</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9em; color: #666;">VAS Margin</div>
+                            <div style="font-size: 1.5em; font-weight: bold; color: #ff9800;" id="vasTotalMargin">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Operational Costs Section -->
+        <div id="operationalTab" class="tab-content hidden">
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">🚛</span> Vehicle & Equipment Costs</h2>
+                    <button class="btn btn-primary no-print" onclick="addVehicleRow()">+ Add Vehicle</button>
+                </div>
+                <table id="vehicleTable">
+                    <thead>
+                        <tr>
+                            <th>Vehicle/Equipment</th>
+                            <th>Reg No</th>
+                            <th>Type</th>
+                            <th>Monthly Lease</th>
+                            <th>Fuel/Maintenance</th>
+                            <th>Monthly Cost</th>
+                            <th>Contract Period Cost</th>
+                            <th class="no-print">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="RCV-001"></td>
+                            <td><input type="text" class="input-cell" value="W 33741" style="width: 100px;"></td>
+                            <td>
+                                <select class="input-cell" onchange="updateCalculations()">
+                                    <option>Compactor</option>
+                                    <option>Skip Truck</option>
+                                    <option>Tipper</option>
+                                    <option>Bin Lifter</option>
+                                </select>
+                            </td>
+                            <td><input type="number" class="input-cell currency" value="3500" onchange="updateCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="1500" onchange="updateCalculations()"></td>
+                            <td class="currency row-monthly">0.00</td>
+                            <td class="currency row-total">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="5"><strong>Total Vehicle Costs</strong></td>
+                            <td class="currency" id="vehicleMonthlyTotal">0.00</td>
+                            <td class="currency" id="vehicleGrandTotal">0.00</td>
+                            <td class="no-print"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">👷</span> Manpower Costs</h2>
+                    <button class="btn btn-primary no-print" onclick="addManpowerRow()">+ Add Staff</button>
+                </div>
+                <table id="manpowerTable">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Qty</th>
+                            <th>Monthly Salary</th>
+                            <th>Benefits (20%)</th>
+                            <th>Monthly Cost</th>
+                            <th>Contract Period Cost</th>
+                            <th class="no-print">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Driver"></td>
+                            <td><input type="number" class="input-cell" value="2" style="width: 60px;" onchange="updateCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="2500" onchange="updateCalculations()"></td>
+                            <td class="currency row-benefits">0.00</td>
+                            <td class="currency row-monthly">0.00</td>
+                            <td class="currency row-total">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Helper/Labor"></td>
+                            <td><input type="number" class="input-cell" value="2" style="width: 60px;" onchange="updateCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="1800" onchange="updateCalculations()"></td>
+                            <td class="currency row-benefits">0.00</td>
+                            <td class="currency row-monthly">0.00</td>
+                            <td class="currency row-total">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Supervisor"></td>
+                            <td><input type="number" class="input-cell" value="1" style="width: 60px;" onchange="updateCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="4000" onchange="updateCalculations()"></td>
+                            <td class="currency row-benefits">0.00</td>
+                            <td class="currency row-monthly">0.00</td>
+                            <td class="currency row-total">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="4"><strong>Total Manpower Costs</strong></td>
+                            <td class="currency" id="manpowerMonthlyTotal">0.00</td>
+                            <td class="currency" id="manpowerGrandTotal">0.00</td>
+                            <td class="no-print"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">🗂️</span> Disposal & Miscellaneous Costs</h2>
+                    <button class="btn btn-primary no-print" onclick="addMiscRow()">+ Add Cost Item</button>
+                </div>
+                <table id="miscTable">
+                    <thead>
+                        <tr>
+                            <th>Cost Item</th>
+                            <th>Unit</th>
+                            <th>Monthly Qty</th>
+                            <th>Rate (AED)</th>
+                            <th>Monthly Cost</th>
+                            <th>Contract Period Cost</th>
+                            <th class="no-print">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Landfill Disposal"></td>
+                            <td><input type="text" class="input-cell" value="Ton" style="width: 80px;"></td>
+                            <td><input type="number" class="input-cell" value="50" style="width: 80px;" onchange="updateCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="100" onchange="updateCalculations()"></td>
+                            <td class="currency row-monthly">0.00</td>
+                            <td class="currency row-total">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="PPE & Safety"></td>
+                            <td><input type="text" class="input-cell" value="Month" style="width: 80px;"></td>
+                            <td><input type="number" class="input-cell" value="1" style="width: 80px;" onchange="updateCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="500" onchange="updateCalculations()"></td>
+                            <td class="currency row-monthly">0.00</td>
+                            <td class="currency row-total">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" class="input-cell" value="Insurance"></td>
+                            <td><input type="text" class="input-cell" value="Month" style="width: 80px;"></td>
+                            <td><input type="number" class="input-cell" value="1" style="width: 80px;" onchange="updateCalculations()"></td>
+                            <td><input type="number" class="input-cell currency" value="800" onchange="updateCalculations()"></td>
+                            <td class="currency row-monthly">0.00</td>
+                            <td class="currency row-total">0.00</td>
+                            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="4"><strong>Total Misc Costs</strong></td>
+                            <td class="currency" id="miscMonthlyTotal">0.00</td>
+                            <td class="currency" id="miscGrandTotal">0.00</td>
+                            <td class="no-print"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Overhead Section -->
+        <div id="overheadTab" class="tab-content hidden">
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">🏢</span> Overhead & Profit Configuration</h2>
+                </div>
+                <div class="form-grid" style="margin-bottom: 30px;">
+                    <div class="form-group">
+                        <label>Management Overhead (%)</label>
+                        <input type="number" class="input-cell percentage-input" id="managementOverhead" value="10" min="0" max="100" onchange="updateCalculations()">
+                        <small style="color: #666; margin-top: 5px;">Office, admin, management costs</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Profit Margin (%)</label>
+                        <input type="number" class="input-cell percentage-input" id="profitMarginInput" value="15" min="0" max="100" onchange="updateCalculations()">
+                        <small style="color: #666; margin-top: 5px;">Desired profit percentage</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Contingency (%)</label>
+                        <input type="number" class="input-cell percentage-input" id="contingency" value="5" min="0" max="100" onchange="updateCalculations()">
+                        <small style="color: #666; margin-top: 5px;">Unexpected costs buffer</small>
+                    </div>
+                    <div class="form-group">
+                        <label>VAT/Tax (%)</label>
+                        <input type="number" class="input-cell percentage-input" id="vatRate" value="5" min="0" max="100" onchange="updateCalculations()">
+                        <small style="color: #666; margin-top: 5px;">Value Added Tax</small>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Calculation Base</th>
+                            <th>Percentage</th>
+                            <th>Amount (AED)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Direct Operational Costs</td>
+                            <td>Sum of all operational costs</td>
+                            <td>-</td>
+                            <td class="currency" id="directCosts">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Management Overhead</td>
+                            <td>Direct Costs</td>
+                            <td id="overheadPercentDisplay">10%</td>
+                            <td class="currency" id="overheadAmount">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Contingency Reserve</td>
+                            <td>Direct Costs</td>
+                            <td id="contingencyPercentDisplay">5%</td>
+                            <td class="currency" id="contingencyAmount">0.00</td>
+                        </tr>
+                        <tr style="background: #f3e5f5; font-weight: bold;">
+                            <td>Total Cost (Break-even)</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td class="currency" id="totalCostBreakEven">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Profit Margin</td>
+                            <td>Total Cost</td>
+                            <td id="profitPercentDisplay">15%</td>
+                            <td class="currency" id="profitAmount">0.00</td>
+                        </tr>
+                        <tr style="background: #e1bee7; font-weight: bold; font-size: 1.1em;">
+                            <td>Required Revenue (Excl. VAT)</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td class="currency" id="requiredRevenue">0.00</td>
+                        </tr>
+                        <tr>
+                            <td>VAT Amount</td>
+                            <td>Required Revenue</td>
+                            <td id="vatPercentDisplay">5%</td>
+                            <td class="currency" id="vatAmount">0.00</td>
+                        </tr>
+                        <tr style="background: #4a148c; color: white; font-weight: bold; font-size: 1.2em;">
+                            <td>TOTAL CONTRACT VALUE (Incl. VAT)</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td class="currency" id="totalWithVAT">0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div id="summaryTab" class="tab-content hidden">
+            <div class="summary-section">
+                <h2 style="margin-bottom: 10px;">Financial Health Dashboard</h2>
+                <p style="opacity: 0.9; margin-bottom: 20px;">Real-time profitability analysis for <strong id="summaryProjectName">Project</strong></p>
+                
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <h4>Monthly Revenue</h4>
+                        <div class="amount" id="summaryMonthlyRevenue">AED 0</div>
+                    </div>
+                    <div class="summary-item">
+                        <h4>Monthly Cost</h4>
+                        <div class="amount" id="summaryMonthlyCost">AED 0</div>
+                    </div>
+                    <div class="summary-item">
+                        <h4>Monthly Profit</h4>
+                        <div class="amount" id="summaryMonthlyProfit">AED 0</div>
+                    </div>
+                    <div class="summary-item">
+                        <h4>Project Status</h4>
+                        <div class="amount" id="projectStatus">
+                            <span class="status-badge status-profit">Healthy</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;">
+                    <h3 style="margin-bottom: 15px;">Key Metrics</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div>
+                            <div style="font-size: 0.9em; opacity: 0.8;">Break-even per Day</div>
+                            <div style="font-size: 1.5em; font-weight: bold; margin-top: 5px;" id="breakEvenDaily">AED 0</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9em; opacity: 0.8;">Cost per Trip</div>
+                            <div style="font-size: 1.5em; font-weight: bold; margin-top: 5px;" id="costPerTrip">AED 0</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9em; opacity: 0.8;">Manpower % of Cost</div>
+                            <div style="font-size: 1.5em; font-weight: bold; margin-top: 5px;" id="manpowerPercent">0%</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9em; opacity: 0.8;">Vehicle % of Cost</div>
+                            <div style="font-size: 1.5em; font-weight: bold; margin-top: 5px;" id="vehiclePercent">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2><span class="icon">📊</span> Cost Breakdown Analysis</h2>
+                </div>
+                <div id="costBreakdownChart" style="height: 300px; background: #f9f9f9; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #666;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 3em; margin-bottom: 10px;">📈</div>
+                        <div>Cost visualization would render here</div>
+                        <div style="font-size: 0.9em; margin-top: 10px;">
+                            Vehicles: <span id="chartVehicle">0%</span> | 
+                            Manpower: <span id="chartManpower">0%</span> | 
+                            Misc: <span id="chartMisc">0%</span> | 
+                            Overhead: <span id="chartOverhead">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-bar no-print">
+            <button class="btn btn-success" onclick="exportToExcel()">📥 Export Excel (.xlsx)</button>
+            <button class="btn btn-primary" onclick="generatePDF()">📄 Print PDF Report</button>
+            <button class="btn btn-secondary" onclick="saveProject()">💾 Save Project</button>
+            <button class="btn btn-secondary" onclick="loadProject()">📂 Load Project</button>
+            <button class="btn btn-danger" onclick="resetAll()">🔄 Reset All</button>
+        </div>
+    </div>
+
+    <script>
+        // Global logo storage
+        let companyLogoBase64 = '';
+        
+        // Bin types configuration
+        const binTypes = [
+            {id: '120_black_plastic', name: '120L Black (Plastic)', category: 'Wheelie'},
+            {id: '120_green_plastic', name: '120L Green (Plastic)', category: 'Wheelie'},
+            {id: '240_black_plastic', name: '240L Black (Plastic)', category: 'Wheelie'},
+            {id: '240_green_plastic', name: '240L Green (Plastic)', category: 'Wheelie'},
+            {id: '1_1_gal', name: '1.1 CBM Galvanised', category: 'Metal'},
+            {id: '2_5_gal', name: '2.5 CBM Galvanised', category: 'Metal'},
+            {id: '4_5_gal', name: '4.5 CBM Galvanised', category: 'Metal'},
+            {id: '5_skip', name: '5 CBM Skip', category: 'Skip'},
+            {id: '10_skip', name: '10 CBM Skip', category: 'Skip'},
+            {id: '14_skip', name: '14 CBM Skip', category: 'Skip'},
+            {id: '20_skip', name: '20 CBM Skip', category: 'Skip'},
+            {id: '12_pc', name: '12 CBM PC Bin', category: 'PC'},
+            {id: '20_pc', name: '20 CBM PC Bin', category: 'PC'}
+        ];
+
+        // Initialize
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB');
+        
+        // Logo upload handler
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    companyLogoBase64 = e.target.result;
+                    document.getElementById('headerLogo').src = companyLogoBase64;
+                    
+                    // Show preview
+                    const previewContainer = document.getElementById('logoPreviewContainer');
+                    previewContainer.innerHTML = `<img src="${companyLogoBase64}" class="logo-preview" alt="Logo Preview">`;
+                    
+                    showNotification('Logo uploaded successfully!', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+            event.target.classList.add('active');
+        }
+
+        // Bin calculations
+        function updateBinCalculations() {
+            let totalInvestment = 0;
+            let totalMonthlyRental = 0;
+            const period = parseInt(document.getElementById('contractPeriod').value) || 12;
+            
+            binTypes.forEach(bin => {
+                const qty = parseInt(document.getElementById(`bin_${bin.id}_qty`).value) || 0;
+                const cost = parseFloat(document.getElementById(`bin_${bin.id}_cost`).value) || 0;
+                const rental = parseFloat(document.getElementById(`bin_${bin.id}_rental`).value) || 0;
+                
+                const totalCost = qty * cost;
+                totalInvestment += totalCost;
+                totalMonthlyRental += (qty * rental);
+                
+                document.getElementById(`bin_${bin.id}_total`).value = totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            });
+            
+            // Liners and cleaning
+            const linerQty = parseInt(document.getElementById('liner_qty').value) || 0;
+            const linerCost = parseFloat(document.getElementById('liner_unit_cost').value) || 0;
+            const linerMonthly = linerQty * linerCost;
+            const linerTotal = linerMonthly * period;
+            
+            document.getElementById('liner_monthly_cost').value = linerMonthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('liner_total_cost').value = linerTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            const cleaningQty = parseInt(document.getElementById('cleaning_qty').value) || 0;
+            const cleaningCost = parseFloat(document.getElementById('cleaning_unit_cost').value) || 0;
+            const cleaningMonthly = cleaningQty * cleaningCost;
+            const cleaningTotal = cleaningMonthly * period;
+            
+            document.getElementById('cleaning_monthly_cost').value = cleaningMonthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('cleaning_total_cost').value = cleaningTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            totalInvestment += linerTotal + cleaningTotal;
+            
+            document.getElementById('totalBinInvestment').textContent = 'AED ' + totalInvestment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Update bin revenue table
+            updateBinRevenueTable();
+            
+            // Update main calculations
+            updateCalculations();
+        }
+
+        function updateBinRevenueTable() {
+            const tbody = document.getElementById('binRevenueBody');
+            tbody.innerHTML = '';
+            let totalMonthly = 0;
+            const period = parseInt(document.getElementById('contractPeriod').value) || 12;
+            
+            binTypes.forEach(bin => {
+                const qty = parseInt(document.getElementById(`bin_${bin.id}_qty`).value) || 0;
+                if (qty > 0) {
+                    const rental = parseFloat(document.getElementById(`bin_${bin.id}_rental`).value) || 0;
+                    const monthly = qty * rental;
+                    const total = monthly * period;
+                    totalMonthly += monthly;
+                    
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${bin.name}</td>
+                        <td>${qty}</td>
+                        <td class="currency">${rental.toFixed(2)}</td>
+                        <td class="currency">${monthly.toFixed(2)}</td>
+                        <td class="currency">${total.toFixed(2)}</td>
+                    `;
+                }
+            });
+            
+            document.getElementById('binRevenueMonthly').textContent = totalMonthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('binRevenueTotal').textContent = (totalMonthly * period).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            return totalMonthly;
+        }
+
+        // VAS calculations
+        function updateVASCalculations() {
+            let totalRevenue = 0;
+            let totalCost = 0;
+            let totalProfit = 0;
+            
+            document.querySelectorAll('#vasTable tbody tr').forEach(row => {
+                const qty = parseFloat(row.cells[3].querySelector('input').value) || 0;
+                const cost = parseFloat(row.cells[4].querySelector('input').value) || 0;
+                const price = parseFloat(row.cells[5].querySelector('input').value) || 0;
+                
+                const monthlyCost = qty * cost;
+                const monthlyRevenue = qty * price;
+                const profit = monthlyRevenue - monthlyCost;
+                const margin = monthlyRevenue > 0 ? ((profit / monthlyRevenue) * 100) : 0;
+                
+                row.cells[6].textContent = margin.toFixed(1) + '%';
+                row.cells[7].textContent = profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                
+                totalRevenue += monthlyRevenue;
+                totalCost += monthlyCost;
+                totalProfit += profit;
+            });
+            
+            const avgMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100) : 0;
+            
+            document.getElementById('vasAvgMargin').textContent = avgMargin.toFixed(1) + '%';
+            document.getElementById('vasTotalProfit').textContent = totalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            document.getElementById('vasMonthlyRevenue').textContent = 'AED ' + totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('vasMonthlyCost').textContent = 'AED ' + totalCost.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('vasNetProfit').textContent = 'AED ' + totalProfit.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('vasTotalMargin').textContent = avgMargin.toFixed(1) + '%';
+            
+            updateCalculations();
+        }
+
+        // Core calculation function
+        function updateCalculations() {
+            const period = parseInt(document.getElementById('contractPeriod').value) || 12;
+            
+            // Calculate Service Revenue
+            let serviceRevenueMonthly = 0;
+            document.querySelectorAll('#revenueTable tbody tr').forEach(row => {
+                const qty = parseFloat(row.cells[2].querySelector('input').value) || 0;
+                const rate = parseFloat(row.cells[3].querySelector('input').value) || 0;
+                const monthly = qty * rate;
+                const total = monthly * period;
+                
+                row.cells[4].textContent = monthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                row.cells[5].textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                serviceRevenueMonthly += monthly;
+            });
+            
+            document.getElementById('revenueMonthlyTotal').textContent = serviceRevenueMonthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('revenueGrandTotal').textContent = (serviceRevenueMonthly * period).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Get Bin Revenue
+            const binRevenueMonthly = updateBinRevenueTable();
+            
+            // Calculate VAS Revenue
+            let vasRevenueMonthly = 0;
+            document.querySelectorAll('#vasTable tbody tr').forEach(row => {
+                const qty = parseFloat(row.cells[3].querySelector('input').value) || 0;
+                const price = parseFloat(row.cells[5].querySelector('input').value) || 0;
+                vasRevenueMonthly += (qty * price);
+            });
+            
+            // Total Revenue
+            const totalRevenueMonthly = serviceRevenueMonthly + binRevenueMonthly + vasRevenueMonthly;
+            
+            // Calculate Vehicle Costs
+            let vehicleMonthly = 0;
+            document.querySelectorAll('#vehicleTable tbody tr').forEach(row => {
+                const lease = parseFloat(row.cells[3].querySelector('input').value) || 0;
+                const fuel = parseFloat(row.cells[4].querySelector('input').value) || 0;
+                const monthly = lease + fuel;
+                const total = monthly * period;
+                
+                row.cells[5].textContent = monthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                row.cells[6].textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                vehicleMonthly += monthly;
+            });
+            
+            document.getElementById('vehicleMonthlyTotal').textContent = vehicleMonthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('vehicleGrandTotal').textContent = (vehicleMonthly * period).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Calculate Manpower Costs
+            let manpowerMonthly = 0;
+            document.querySelectorAll('#manpowerTable tbody tr').forEach(row => {
+                const qty = parseFloat(row.cells[1].querySelector('input').value) || 0;
+                const salary = parseFloat(row.cells[2].querySelector('input').value) || 0;
+                const benefits = salary * 0.20;
+                const monthly = (salary + benefits) * qty;
+                const total = monthly * period;
+                
+                row.cells[3].textContent = benefits.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                row.cells[4].textContent = monthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                row.cells[5].textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                manpowerMonthly += monthly;
+            });
+            
+            document.getElementById('manpowerMonthlyTotal').textContent = manpowerMonthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('manpowerGrandTotal').textContent = (manpowerMonthly * period).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Calculate Misc Costs
+            let miscMonthly = 0;
+            document.querySelectorAll('#miscTable tbody tr').forEach(row => {
+                const qty = parseFloat(row.cells[2].querySelector('input').value) || 0;
+                const rate = parseFloat(row.cells[3].querySelector('input').value) || 0;
+                const monthly = qty * rate;
+                const total = monthly * period;
+                
+                row.cells[4].textContent = monthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                row.cells[5].textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                miscMonthly += monthly;
+            });
+            
+            document.getElementById('miscMonthlyTotal').textContent = miscMonthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('miscGrandTotal').textContent = (miscMonthly * period).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Calculate VAS Costs
+            let vasCostMonthly = 0;
+            document.querySelectorAll('#vasTable tbody tr').forEach(row => {
+                const qty = parseFloat(row.cells[3].querySelector('input').value) || 0;
+                const cost = parseFloat(row.cells[4].querySelector('input').value) || 0;
+                vasCostMonthly += (qty * cost);
+            });
+            
+            // Overhead calculations
+            const directCosts = vehicleMonthly + manpowerMonthly + miscMonthly + vasCostMonthly;
+            const overheadPercent = parseFloat(document.getElementById('managementOverhead').value) || 0;
+            const profitPercent = parseFloat(document.getElementById('profitMarginInput').value) || 0;
+            const contingencyPercent = parseFloat(document.getElementById('contingency').value) || 0;
+            const vatPercent = parseFloat(document.getElementById('vatRate').value) || 0;
+            
+            const overheadAmount = directCosts * (overheadPercent / 100);
+            const contingencyAmount = directCosts * (contingencyPercent / 100);
+            const totalCost = directCosts + overheadAmount + contingencyAmount;
+            const profitAmount = totalCost * (profitPercent / 100);
+            const requiredRevenue = totalCost + profitAmount;
+            const vatAmount = requiredRevenue * (vatPercent / 100);
+            const totalWithVAT = requiredRevenue + vatAmount;
+            
+            // Update overhead table
+            document.getElementById('directCosts').textContent = directCosts.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('overheadPercentDisplay').textContent = overheadPercent + '%';
+            document.getElementById('overheadAmount').textContent = overheadAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('contingencyPercentDisplay').textContent = contingencyPercent + '%';
+            document.getElementById('contingencyAmount').textContent = contingencyAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('totalCostBreakEven').textContent = totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('profitPercentDisplay').textContent = profitPercent + '%';
+            document.getElementById('profitAmount').textContent = profitAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('requiredRevenue').textContent = requiredRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('vatPercentDisplay').textContent = vatPercent + '%';
+            document.getElementById('vatAmount').textContent = vatAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('totalWithVAT').textContent = totalWithVAT.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Update dashboard cards
+            const actualCosts = totalCost;
+            const netProfit = totalRevenueMonthly - actualCosts;
+            const margin = totalRevenueMonthly > 0 ? (netProfit / totalRevenueMonthly * 100) : 0;
+            const dailyRev = totalRevenueMonthly / 30;
+            
+            document.getElementById('totalRevenue').textContent = 'AED ' + totalRevenueMonthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('totalCosts').textContent = 'AED ' + actualCosts.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('netProfit').textContent = 'AED ' + Math.abs(netProfit).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('profitMargin').textContent = 'Margin: ' + margin.toFixed(1) + '%';
+            document.getElementById('dailyRevenue').textContent = 'AED ' + dailyRev.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Update profit card color
+            const profitCard = document.getElementById('profitCard');
+            if (netProfit >= 0) {
+                profitCard.classList.remove('loss');
+                profitCard.classList.add('profit');
+            } else {
+                profitCard.classList.remove('profit');
+                profitCard.classList.add('loss');
+            }
+            
+            // Update summary
+            document.getElementById('summaryProjectName').textContent = document.getElementById('projectName').value || 'Project';
+            document.getElementById('summaryMonthlyRevenue').textContent = 'AED ' + totalRevenueMonthly.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('summaryMonthlyCost').textContent = 'AED ' + actualCosts.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('summaryMonthlyProfit').textContent = 'AED ' + netProfit.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            
+            const statusBadge = document.getElementById('projectStatus');
+            if (margin >= 15) {
+                statusBadge.innerHTML = '<span class="status-badge status-profit">Excellent</span>';
+            } else if (margin >= 5) {
+                statusBadge.innerHTML = '<span class="status-badge status-profit">Good</span>';
+            } else if (margin >= 0) {
+                statusBadge.innerHTML = '<span class="status-badge status-break-even">Break-even</span>';
+            } else {
+                statusBadge.innerHTML = '<span class="status-badge status-loss">Loss</span>';
+            }
+            
+            // Key metrics
+            document.getElementById('breakEvenDaily').textContent = 'AED ' + (actualCosts / 30).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            
+            const totalTrips = 30;
+            document.getElementById('costPerTrip').textContent = 'AED ' + (actualCosts / totalTrips).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            
+            const totalOpCosts = vehicleMonthly + manpowerMonthly + miscMonthly;
+            document.getElementById('manpowerPercent').textContent = totalOpCosts > 0 ? ((manpowerMonthly / totalOpCosts) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('vehiclePercent').textContent = totalOpCosts > 0 ? ((vehicleMonthly / totalOpCosts) * 100).toFixed(1) + '%' : '0%';
+            
+            // Chart data
+            document.getElementById('chartVehicle').textContent = totalOpCosts > 0 ? ((vehicleMonthly / totalOpCosts) * 100).toFixed(0) + '%' : '0%';
+            document.getElementById('chartManpower').textContent = totalOpCosts > 0 ? ((manpowerMonthly / totalOpCosts) * 100).toFixed(0) + '%' : '0%';
+            document.getElementById('chartMisc').textContent = totalOpCosts > 0 ? ((miscMonthly / totalOpCosts) * 100).toFixed(0) + '%' : '0%';
+            document.getElementById('chartOverhead').textContent = overheadPercent + '%';
+        }
+
+        // Row management functions
+        function addRevenueRow() {
+            const tbody = document.querySelector('#revenueTable tbody');
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td><input type="text" class="input-cell" value="" placeholder="Service description" onchange="updateCalculations()"></td>
+                <td><input type="text" class="input-cell" value="Trip" style="width: 80px;" onchange="updateCalculations()"></td>
+                <td><input type="number" class="input-cell" value="0" style="width: 80px;" onchange="updateCalculations()"></td>
+                <td><input type="number" class="input-cell currency" value="0" onchange="updateCalculations()"></td>
+                <td class="currency row-monthly">0.00</td>
+                <td class="currency row-total">0.00</td>
+                <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+            `;
+            updateCalculations();
+        }
+
+        function addVASRow() {
+            const tbody = document.querySelector('#vasTable tbody');
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td><input type="text" class="input-cell" value=""></td>
+                <td>
+                    <select class="input-cell">
+                        <option>Cleaning</option>
+                        <option>Recycling</option>
+                        <option>Consulting</option>
+                        <option>Equipment</option>
+                        <option>Training</option>
+                    </select>
+                </td>
+                <td><input type="text" class="input-cell" value="Unit" style="width: 80px;"></td>
+                <td><input type="number" class="input-cell" value="0" style="width: 80px;" onchange="updateVASCalculations()"></td>
+                <td><input type="number" class="input-cell currency" value="0" onchange="updateVASCalculations()"></td>
+                <td><input type="number" class="input-cell currency" value="0" onchange="updateVASCalculations()"></td>
+                <td class="currency vas-margin">0%</td>
+                <td class="currency vas-profit">0.00</td>
+                <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+            `;
+            updateVASCalculations();
+        }
+
+        function addVehicleRow() {
+            const tbody = document.querySelector('#vehicleTable tbody');
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td><input type="text" class="input-cell" value=""></td>
+                <td><input type="text" class="input-cell" value="" style="width: 100px;"></td>
+                <td>
+                    <select class="input-cell" onchange="updateCalculations()">
+                        <option>Compactor</option>
+                        <option>Skip Truck</option>
+                        <option>Tipper</option>
+                        <option>Bin Lifter</option>
+                    </select>
+                </td>
+                <td><input type="number" class="input-cell currency" value="0" onchange="updateCalculations()"></td>
+                <td><input type="number" class="input-cell currency" value="0" onchange="updateCalculations()"></td>
+                <td class="currency row-monthly">0.00</td>
+                <td class="currency row-total">0.00</td>
+                <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+            `;
+            updateCalculations();
+        }
+
+        function addManpowerRow() {
+            const tbody = document.querySelector('#manpowerTable tbody');
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td><input type="text" class="input-cell" value=""></td>
+                <td><input type="number" class="input-cell" value="1" style="width: 60px;" onchange="updateCalculations()"></td>
+                <td><input type="number" class="input-cell currency" value="0" onchange="updateCalculations()"></td>
+                <td class="currency row-benefits">0.00</td>
+                <td class="currency row-monthly">0.00</td>
+                <td class="currency row-total">0.00</td>
+                <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+            `;
+            updateCalculations();
+        }
+
+        function addMiscRow() {
+            const tbody = document.querySelector('#miscTable tbody');
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td><input type="text" class="input-cell" value=""></td>
+                <td><input type="text" class="input-cell" value="Month" style="width: 80px;"></td>
+                <td><input type="number" class="input-cell" value="1" style="width: 80px;" onchange="updateCalculations()"></td>
+                <td><input type="number" class="input-cell currency" value="0" onchange="updateCalculations()"></td>
+                <td class="currency row-monthly">0.00</td>
+                <td class="currency row-total">0.00</td>
+                <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
+            `;
+            updateCalculations();
+        }
+
+        function deleteRow(btn) {
+            const row = btn.closest('tr');
+            row.remove();
+            updateCalculations();
+            updateVASCalculations();
+        }
+
+        function calculateBinCosts() {
+            updateBinCalculations();
+            showNotification('Bin costs recalculated!', 'success');
+        }
+
+        // Export to Excel with Logo
+        function exportToExcel() {
+            const projectName = document.getElementById('projectName').value || 'Project';
+            const clientName = document.getElementById('clientName').value || 'N/A';
+            const wb = XLSX.utils.book_new();
+            
+            // Add Logo Sheet
+            if (companyLogoBase64) {
+                const logoSheet = XLSX.utils.aoa_to_sheet([
+                    ['GreenTrack Environment Services'],
+                    ['Master Project Costing Sheet'],
+                    [''],
+                    ['Project:', projectName],
+                    ['Client:', clientName],
+                    ['Date:', new Date().toLocaleDateString()],
+                    [''],
+                    ['Logo embedded above - see image in PDF version']
+                ]);
+                XLSX.utils.book_append_sheet(wb, logoSheet, 'Cover');
+            }
+            
+            // Revenue Sheet
+            const revenueData = [['Service Description', 'Unit', 'Qty/Month', 'Rate (AED)', 'Monthly', 'Contract Value']];
+            document.querySelectorAll('#revenueTable tbody tr').forEach(row => {
+                const cells = row.querySelectorAll('td');
+                revenueData.push([
+                    cells[0].querySelector('input').value,
+                    cells[1].querySelector('input').value,
+                    cells[2].querySelector('input').value,
+                    cells[3].querySelector('input').value,
+                    cells[4].textContent,
+                    cells[5].textContent
+                ]);
+            });
+            revenueData.push(['Total', '', '', '', document.getElementById('revenueMonthlyTotal').textContent, document.getElementById('revenueGrandTotal').textContent]);
+            
+            const revenueWS = XLSX.utils.aoa_to_sheet(revenueData);
+            XLSX.utils.book_append_sheet(wb, revenueWS, 'Revenue');
+            
+            // Bin Inventory Sheet
+            const binData = [['Bin Type', 'Category', 'Qty', 'Unit Cost', 'Monthly Rental', 'Total Investment']];
+            binTypes.forEach(bin => {
+                const qty = document.getElementById(`bin_${bin.id}_qty`).value;
+                if (parseInt(qty) > 0) {
+                    const cost = document.getElementById(`bin_${bin.id}_cost`).value;
+                    const rental = document.getElementById(`bin_${bin.id}_rental`).value;
+                    const total = parseInt(qty) * parseFloat(cost);
+                    binData.push([bin.name, bin.category, qty, cost, rental, total]);
+                }
+            });
+            binData.push(['', '', '', '', 'Total:', document.getElementById('totalBinInvestment').textContent.replace('AED ', '')]);
+            
+            const binWS = XLSX.utils.aoa_to_sheet(binData);
+            XLSX.utils.book_append_sheet(wb, binWS, 'Bin Inventory');
+            
+            // VAS Sheet
+            const vasData = [['VAS Service', 'Category', 'Unit', 'Qty/Month', 'Cost', 'Price', 'Margin %', 'Profit']];
+            document.querySelectorAll('#vasTable tbody tr').forEach(row => {
+                const cells = row.querySelectorAll('td');
+                vasData.push([
+                    cells[0].querySelector('input').value,
+                    cells[1].querySelector('select').value,
+                    cells[2].querySelector('input').value,
+                    cells[3].querySelector('input').value,
+                    cells[4].querySelector('input').value,
+                    cells[5].querySelector('input').value,
+                    cells[6].textContent,
+                    cells[7].textContent
+                ]);
+            });
+            
+            const vasWS = XLSX.utils.aoa_to_sheet(vasData);
+            XLSX.utils.book_append_sheet(wb, vasWS, 'Value Added Services');
+            
+            // Costs Sheet
+            const costsData = [['Cost Category', 'Monthly', 'Contract Period']];
+            costsData.push(['Vehicles', document.getElementById('vehicleMonthlyTotal').textContent, document.getElementById('vehicleGrandTotal').textContent]);
+            costsData.push(['Manpower', document.getElementById('manpowerMonthlyTotal').textContent, document.getElementById('manpowerGrandTotal').textContent]);
+            costsData.push(['Miscellaneous', document.getElementById('miscMonthlyTotal').textContent, document.getElementById('miscGrandTotal').textContent]);
+            costsData.push(['', '', '']);
+            costsData.push(['Total Cost', '', document.getElementById('totalCostBreakEven').textContent]);
+            costsData.push(['Profit', '', document.getElementById('profitAmount').textContent]);
+            costsData.push(['Total with VAT', '', document.getElementById('totalWithVAT').textContent]);
+            
+            const costsWS = XLSX.utils.aoa_to_sheet(costsData);
+            XLSX.utils.book_append_sheet(wb, costsWS, 'Costs Summary');
+            
+            // Save file
+            XLSX.writeFile(wb, `GreenTrack_Costing_${projectName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+            showNotification('Excel file downloaded with logo!', 'success');
+        }
+
+        // Generate PDF with Logo
+        function generatePDF() {
+            // Add print-specific styles dynamically
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @media print {
+                    .header { 
+                        background: #4a148c !important; 
+                        -webkit-print-color-adjust: exact !important; 
+                        print-color-adjust: exact !important;
+                        color: white !important;
+                    }
+                    .logo-img { display: block !important; }
+                    .summary-section { 
+                        background: #4a148c !important; 
+                        -webkit-print-color-adjust: exact !important; 
+                        print-color-adjust: exact !important;
+                        color: white !important;
+                    }
+                    th { 
+                        background: #4a148c !important; 
+                        -webkit-print-color-adjust: exact !important; 
+                        print-color-adjust: exact !important;
+                        color: white !important;
+                    }
+                    .total-row { 
+                        background: #f3e5f5 !important; 
+                        -webkit-print-color-adjust: exact !important; 
+                        print-color-adjust: exact !important;
+                    }
+                    .vas-section {
+                        background: #fff3e0 !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                    body { background: white !important; }
+                    .no-print { display: none !important; }
+                    .section { 
+                        break-inside: avoid; 
+                        page-break-inside: avoid;
+                        box-shadow: none !important;
+                        border: 1px solid #ddd !important;
+                    }
+                    .tab-content { display: block !important; }
+                    .tab-content.hidden { display: block !important; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Trigger print
+            window.print();
+            
+            // Clean up
+            setTimeout(() => {
+                document.head.removeChild(style);
+            }, 1000);
+            
+            showNotification('PDF generated with logo! Use "Save as PDF" in print dialog.', 'success');
+        }
+
+        function saveProject() {
+            const data = {
+                projectName: document.getElementById('projectName').value,
+                clientName: document.getElementById('clientName').value,
+                contractPeriod: document.getElementById('contractPeriod').value,
+                logo: companyLogoBase64,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('greentrack_costing_' + data.projectName, JSON.stringify(data));
+            showNotification('Project saved locally!', 'success');
+        }
+
+        function loadProject() {
+            const name = prompt('Enter project name to load:');
+            if (name) {
+                const data = localStorage.getItem('greentrack_costing_' + name);
+                if (data) {
+                    const project = JSON.parse(data);
+                    document.getElementById('projectName').value = project.projectName;
+                    document.getElementById('clientName').value = project.clientName;
+                    document.getElementById('contractPeriod').value = project.contractPeriod;
+                    if (project.logo) {
+                        companyLogoBase64 = project.logo;
+                        document.getElementById('headerLogo').src = companyLogoBase64;
+                    }
+                    updateCalculations();
+                    showNotification('Project loaded successfully!', 'success');
+                } else {
+                    showNotification('Project not found!', 'error');
+                }
+            }
+        }
+
+        function resetAll() {
+            if (confirm('Are you sure you want to reset all data?')) {
+                location.reload();
+            }
+        }
+
+        function showNotification(message, type) {
+            const notif = document.createElement('div');
+            notif.className = 'notification ' + type;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        // Initial calculation
+        updateBinCalculations();
+        updateVASCalculations();
+        updateCalculations();
+    </script>
+</body>
+</html>
